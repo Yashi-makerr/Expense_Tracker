@@ -10,6 +10,9 @@ function App() {
         <Route path="/" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+
+        {/* ✅ IMPORTANT: fallback route */}
+        <Route path="*" element={<Register />} />
       </Routes>
     </BrowserRouter>
   );
