@@ -28,12 +28,26 @@ function Dashboard() {
   const addExpense = async (e) => {
     e.preventDefault();
 
+    // ✅ VALIDATION (VERY IMPORTANT)
+    if (!form.title || !form.amount || !form.category) {
+      alert("All fields are required");
+      return;
+    }
+
     try {
-      await API.post("/api/expense", form);
-      setForm({ title: "", amount: "", category: "" }); // reset form
+      const res = await API.post("/api/expense", {
+        title: form.title,
+        amount: Number(form.amount),
+        category: form.category
+      });
+
+      console.log("Added:", res.data);
+
+      setForm({ title: "", amount: "", category: "" });
       fetchExpenses();
     } catch (err) {
-      console.log(err);
+      console.log("ERROR:", err.response?.data);
+      alert(err.response?.data?.message || "Failed to add expense");
     }
   };
 
@@ -42,11 +56,9 @@ function Dashboard() {
 
   return (
     <div style={{ background: "#f4f6f9", minHeight: "100vh" }}>
-      
       <Navbar />
 
       <div style={{ padding: "20px" }}>
-        
         <h1 style={{ textAlign: "center" }}>Expense Dashboard</h1>
 
         {/* Total Expense */}
@@ -64,7 +76,7 @@ function Dashboard() {
           Total Expense: ₹{total}
         </div>
 
-        {/* Add Expense Card */}
+        {/* Add Expense */}
         <div style={{
           maxWidth: "500px",
           margin: "20px auto",
@@ -83,6 +95,7 @@ function Dashboard() {
             />
 
             <input
+              type="number" // ✅ IMPORTANT
               placeholder="Amount"
               value={form.amount}
               onChange={(e) => setForm({ ...form, amount: e.target.value })}
@@ -114,7 +127,6 @@ function Dashboard() {
                 justifyContent: "space-between",
                 alignItems: "center"
               }}>
-                
                 <div>
                   <h4 style={{ margin: "0" }}>{exp.title}</h4>
                   <small style={{ color: "#777" }}>{exp.category}</small>
@@ -126,12 +138,10 @@ function Dashboard() {
                 }}>
                   ₹{exp.amount}
                 </div>
-
               </div>
             ))
           )}
         </div>
-
       </div>
     </div>
   );
