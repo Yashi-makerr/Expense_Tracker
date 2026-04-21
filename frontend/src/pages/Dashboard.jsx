@@ -17,7 +17,7 @@ function Dashboard() {
 
   const fetchExpenses = async () => {
     try {
-      const res = await API.get("/expense");
+      const res = await API.get("/api/expense");
       setExpenses(res.data);
     } catch (err) {
       console.log(err);
@@ -29,7 +29,7 @@ function Dashboard() {
     e.preventDefault();
 
     try {
-      await API.post("/expense", form);
+      await API.post("/api/expense", form);
       setForm({ title: "", amount: "", category: "" }); // reset form
       fetchExpenses();
     } catch (err) {

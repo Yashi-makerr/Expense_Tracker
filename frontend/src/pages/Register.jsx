@@ -13,7 +13,7 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    await API.post("/auth/register", form);
+    await API.post("/api/auth/register", form);
     navigate("/login");
   };
 
