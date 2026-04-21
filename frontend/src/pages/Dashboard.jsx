@@ -94,7 +94,7 @@ function Dashboard() {
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             />
 
-            <button>Add Expense</button>
+            <button type="submit">Add Expense</button>
           </form>
         </div>
 
