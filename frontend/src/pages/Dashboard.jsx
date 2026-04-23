@@ -3,91 +3,108 @@ import API from "../services/api";
 import Navbar from "../components/Navbar";
 
 function Dashboard() {
-  const [expenses, setExpenses] = useState([]);
+  const [grievances, setGrievances] = useState([]);
   const [form, setForm] = useState({
     title: "",
-    amount: "",
+    description: "",
     category: ""
   });
+  const [search, setSearch] = useState("");
 
-  // Fetch expenses
   useEffect(() => {
-    fetchExpenses();
+    fetchGrievances();
   }, []);
 
-  const fetchExpenses = async () => {
+  const fetchGrievances = async () => {
     try {
-      const res = await API.get("/api/expense");
-      setExpenses(res.data);
+      const res = await API.get("/api/grievances");
+      setGrievances(res.data);
     } catch (err) {
       console.log(err);
     }
   };
 
-  // Add expense
-  const addExpense = async (e) => {
+  // ✅ ADD
+  const addGrievance = async (e) => {
     e.preventDefault();
 
-    // ✅ VALIDATION (VERY IMPORTANT)
-    if (!form.title || !form.amount || !form.category) {
+    if (!form.title || !form.description || !form.category) {
       alert("All fields are required");
       return;
     }
 
     try {
-      const res = await API.post("/api/expense", {
-        title: form.title,
-        amount: Number(form.amount),
-        category: form.category
-      });
-
-      console.log("Added:", res.data);
-
-      setForm({ title: "", amount: "", category: "" });
-      fetchExpenses();
+      await API.post("/api/grievances", form);
+      setForm({ title: "", description: "", category: "" });
+      fetchGrievances();
     } catch (err) {
-      console.log("ERROR:", err.response?.data);
-      alert(err.response?.data?.message || "Failed to add expense");
+      alert(err.response?.data?.message || "Error");
     }
   };
 
-  // Calculate total
-  const total = expenses.reduce((sum, exp) => sum + Number(exp.amount), 0);
+  // ✅ DELETE
+  const deleteGrievance = async (id) => {
+    if (!window.confirm("Delete this grievance?")) return;
+
+    try {
+      await API.delete(`/api/grievances/${id}`);
+      fetchGrievances();
+    } catch (err) {
+      alert("Delete failed");
+    }
+  };
+
+  // ✅ UPDATE STATUS
+  const markResolved = async (id) => {
+    try {
+      await API.put(`/api/grievances/${id}`, {
+        status: "Resolved"
+      });
+      fetchGrievances();
+    } catch (err) {
+      alert("Update failed");
+    }
+  };
+
+  // ✅ SEARCH
+  const searchGrievance = async () => {
+    try {
+      const res = await API.get(`/api/grievances/search?title=${search}`);
+      setGrievances(res.data);
+    } catch (err) {
+      console.log(err);
+    }
+  };
 
   return (
     <div style={{ background: "#f4f6f9", minHeight: "100vh" }}>
       <Navbar />
 
       <div style={{ padding: "20px" }}>
-        <h1 style={{ textAlign: "center" }}>Expense Dashboard</h1>
+        <h1 style={{ textAlign: "center" }}>Grievance Dashboard</h1>
 
-        {/* Total Expense */}
-        <div style={{
-          maxWidth: "500px",
-          margin: "20px auto",
-          padding: "15px",
-          background: "#4CAF50",
-          color: "white",
-          borderRadius: "10px",
-          textAlign: "center",
-          fontSize: "18px",
-          fontWeight: "bold"
-        }}>
-          Total Expense: ₹{total}
+        {/* 🔍 SEARCH */}
+        <div style={{ textAlign: "center", marginBottom: "20px" }}>
+          <input
+            placeholder="Search grievance..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <button onClick={searchGrievance}>Search</button>
+          <button onClick={fetchGrievances}>Reset</button>
         </div>
 
-        {/* Add Expense */}
+        {/* ADD */}
         <div style={{
           maxWidth: "500px",
           margin: "20px auto",
           padding: "20px",
           background: "white",
-          borderRadius: "12px",
-          boxShadow: "0 4px 10px rgba(0,0,0,0.1)"
+          borderRadius: "12px"
         }}>
-          <h3>Add Expense</h3>
+          <h3>Submit Grievance</h3>
 
-          <form onSubmit={addExpense}>
+          <form onSubmit={addGrievance}>
             <input
               placeholder="Title"
               value={form.title}
@@ -95,49 +112,55 @@ function Dashboard() {
             />
 
             <input
-              type="number" // ✅ IMPORTANT
-              placeholder="Amount"
-              value={form.amount}
-              onChange={(e) => setForm({ ...form, amount: e.target.value })}
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
             />
 
-            <input
-              placeholder="Category"
+            <select
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
-            />
+            >
+              <option value="">Select Category</option>
+              <option value="Academic">Academic</option>
+              <option value="Hostel">Hostel</option>
+              <option value="Transport">Transport</option>
+              <option value="Other">Other</option>
+            </select>
 
-            <button type="submit">Add Expense</button>
+            <button type="submit">Submit</button>
           </form>
         </div>
 
-        {/* Expense List */}
+        {/* LIST */}
         <div style={{ maxWidth: "600px", margin: "auto" }}>
-          {expenses.length === 0 ? (
-            <p style={{ textAlign: "center" }}>No expenses yet</p>
+          {grievances.length === 0 ? (
+            <p>No grievances</p>
           ) : (
-            expenses.map((exp) => (
-              <div key={exp._id} style={{
+            grievances.map((g) => (
+              <div key={g._id} style={{
                 background: "white",
                 padding: "15px",
                 margin: "10px 0",
-                borderRadius: "10px",
-                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center"
+                borderRadius: "10px"
               }}>
-                <div>
-                  <h4 style={{ margin: "0" }}>{exp.title}</h4>
-                  <small style={{ color: "#777" }}>{exp.category}</small>
-                </div>
+                <h4>{g.title}</h4>
+                <p>{g.description}</p>
 
-                <div style={{
-                  fontWeight: "bold",
-                  color: "#4CAF50"
-                }}>
-                  ₹{exp.amount}
-                </div>
+                <small>
+                  {g.category} | {g.status}
+                </small>
+
+                <br />
+
+                {/* ACTION BUTTONS */}
+                <button onClick={() => markResolved(g._id)}>
+                  Mark Resolved
+                </button>
+
+                <button onClick={() => deleteGrievance(g._id)}>
+                  Delete
+                </button>
               </div>
             ))
           )}
